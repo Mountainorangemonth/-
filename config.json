@@ -8,7 +8,7 @@
   "api_settings": {
     "url": "https://api.deepseek.com/v1/chat/completions",
     "model": "deepseek-chat",
-    "api_key": "sk-bd95323a149a403dbbf49d078a1473d6",
+    "api_key": "",
     "auth_header": "Authorization"
   },
   "persistent_server_settings": {
