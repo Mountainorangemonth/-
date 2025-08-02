@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persistent Translate Server</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f0f2f5;
+            color: #1c1e21;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
+        }
+        h1 {
+            text-align: center;
+            color: #1877f2;
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 12px;
+            border: 1px solid #dddfe2;
+            border-radius: 8px;
+            font-size: 16px;
+            line-height: 1.5;
+            resize: vertical;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            background-color: #1877f2;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #166fe5;
+        }
+        button:disabled {
+            background-color: #a0bdf5;
+            cursor: not-allowed;
+        }
+        #results-container {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #f7f7f7;
+            border: 1px solid #dddfe2;
+            border-radius: 8px;
+            min-height: 100px;
+            white-space: pre-wrap;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 15px;
+        }
+        .loader {
+            text-align: center;
+            font-size: 18px;
+            color: #606770;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Persistent Translate Server</h1>
+        <textarea id="input-texts" placeholder="Enter texts to translate, one per line..."></textarea>
+        <button id="translate-btn">Translate</button>
+        <div id="results-container">
+            <div class="loader" style="display: none;">Translating...</div>
+            <div id="output"></div>
+        </div>
+    </div>
+
+    <script>
+        async function translate() {
+            const inputText = document.getElementById('input-texts').value;
+            const texts = inputText.split('\n').filter(text => text.trim() !== '');
+            
+            if (texts.length === 0) {
+                return;
+            }
+
+            const translateBtn = document.getElementById('translate-btn');
+            const resultsContainer = document.getElementById('results-container');
+            const outputDiv = document.getElementById('output');
+            const loader = resultsContainer.querySelector('.loader');
+
+            translateBtn.disabled = true;
+            outputDiv.innerHTML = '';
+            loader.style.display = 'block';
+
+            try {
+                const response = await fetch('/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ texts: texts }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const translations = await response.json();
+                let resultsHTML = '';
+                texts.forEach(text => {
+                    const translated = translations[text] || text;
+                    resultsHTML += `<div><strong>${text}</strong> -> ${translated}</div>`;
+                });
+                outputDiv.innerHTML = resultsHTML;
+
+            } catch (error) {
+                outputDiv.innerHTML = `<div style="color: red;">Error: ${error.message}</div>`;
+            } finally {
+                translateBtn.disabled = false;
+                loader.style.display = 'none';
+            }
+        }
+
+        // Attach the event listener programmatically
+        document.getElementById('translate-btn').addEventListener('click', translate);
+    </script>
+</body>
+</html>
